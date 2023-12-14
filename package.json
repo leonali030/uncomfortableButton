@@ -1,0 +1,29 @@
+{
+  "name": "uncomfortable_button",
+  "version": "1.0.0",
+  "description": "make feeling uncomfortable comfortable",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leonali030/uncomfortableButton.git"
+  },
+  "keywords": [
+    "Microcontroller",
+    "Programming",
+    "JavaScript"
+  ],
+  "author": "LeonaLee",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/leonali030/uncomfortableButton/issues"
+  },
+  "homepage": "https://github.com/leonali030/uncomfortableButton#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.5"
+  }
+}
