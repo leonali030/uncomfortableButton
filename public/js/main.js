@@ -1,26 +1,133 @@
-// Assuming you have a way to get the current user and rock data
-// Update the DOM with the user information
-document.getElementById('userInfo').innerText = `Logged in as ${currentUser}`;
+// Function to update UI on login
+function updateUIOnLogin(username) {
+    document.getElementById('userInfo').innerText = 'Hi ' + username;
+    document.getElementById('registerFormContainer').style.display = 'none';
+    document.getElementById('loginFormContainer').style.display = 'none';
+    document.getElementById('logoutButton').style.display = 'block';
+    document.getElementById('uncomfortableButton').style.display = 'block';
+    document.getElementById('rockStatus').style.display = 'block';
+}
 
-// Handle the 'Felt Uncomfortable' button click
-document.getElementById('uncomfortableButton').addEventListener('click', function() {
-    // Update the rock status
-    currentRock.clicks += 1;
-    let percentage = (currentRock.initialValue - currentRock.clicks * 10) / currentRock.initialValue * 100;
-    document.getElementById('rockStatus').innerText = `Current progress of rock hitting: ${percentage}%`;
-    
-    // Check if the rock has cracked open
-    if (percentage <= 0) {
-        // Assign a new rock and update the jade value
-        currentRock = assignNewRock();
-        updateUserJade();
+// Function to update UI on logout
+function updateUIOnLogout() {
+    document.getElementById('registerFormContainer').style.display = 'block';
+    document.getElementById('loginFormContainer').style.display = 'block';
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('logoutButton').style.display = 'none';
+    document.getElementById('uncomfortableButton').style.display = 'none';
+    document.getElementById('rockStatus').style.display = 'none';
+}
+
+// Check if user is already logged in
+document.addEventListener('DOMContentLoaded', function() {
+    const loggedInUsername = sessionStorage.getItem('username');
+    if (loggedInUsername) {
+        updateUIOnLogin(loggedInUsername);
     }
+
+    // Handle Registration Form Submission
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+       
+        const formData = new FormData(this);
+        const data = {
+            username: formData.get('username'),
+            password: formData.get('password')
+        };
+
+        fetch('/user/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sessionStorage.setItem('username', formData.get('username'));
+                updateUIOnLogin(formData.get('username'));
+            } else {
+                alert('Registration failed: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+
+    // Handle Login Form Submission
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        const data = {
+            username: formData.get('username'),
+            password: formData.get('password')
+        };
+
+        fetch('/user/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sessionStorage.setItem('username', formData.get('username'));
+                updateUIOnLogin(formData.get('username'));
+            } else {
+                alert('Login failed: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+    // Handle Logout
+    document.getElementById('logoutButton').addEventListener('click', function() {
+        fetch('/user/logout', {
+            method: 'GET'
+        })
+        .then(response => response.text())
+        .then(data => {
+            sessionStorage.removeItem('username');
+            updateUIOnLogout();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+    // Handle the 'Felt Uncomfortable' Button Click
+    document.getElementById('uncomfortableButton').addEventListener('click', function() {
+        const userId = sessionStorage.getItem('userId'); // Retrieve the user ID
+        console.log(userId);
+        if (!userId) {
+            alert("You must be logged in to perform this action.");
+            return;
+        }
+
+        fetch('/api/hit-rock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId }) // Use the actual user ID
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('rockStatus').innerText = `Current progress of rock hitting: ${data.updatedStatus}%`;
+            } else {
+                console.error('Error:', data.message);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
 });
-
-function assignNewRock() {
-    // Logic to assign a new rock with initial value between 10 and 500
-}
-
-function updateUserJade() {
-    // Update the user's jade value
-}

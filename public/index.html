@@ -5,9 +5,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Registration Form -->
+    <div id="registerFormContainer">
+        <form id="registerForm">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginFormContainer">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <!-- Logout Button -->
+    <button id="logoutButton" style="display: none;">Logout</button>
+
+    <!-- User Info and Main Content -->
     <div id="userInfo"></div>
-    <button id="uncomfortableButton">Felt Uncomfortable</button>
+    <button id="uncomfortableButton" style="display: none;">Felt Uncomfortable</button>
     <div id="rockStatus">Current progress of rock hitting: 0%</div>
     <div id="jadeValue"></div>
+
+    <script src="/js/main.js"></script>
 </body>
 </html>

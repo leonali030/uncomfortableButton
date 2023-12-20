@@ -1,0 +1,47 @@
+I’ved changed the JS file as you requested. Here is my index.html file. 
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Main Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="userInfo"></div>
+    <button id="uncomfortableButton">Felt Uncomfortable</button>
+    <div id="rockStatus">Current progress of rock hitting: 0%</div>
+    <div id="jadeValue"></div>
+</body>
+</html>
+```
+
+Add logic so every time I hit Felt Uncomfortable button on this page there is one hit added in the database.
+
+In the database, each user should have the following data (just an example, you can create a more accurate one)
+
+a user table
+
+userid (unique key)
+
+password
+
+a user status table
+
+userid (unique key)
+
+current_rock_id (each rock as a unique id)
+
+current_rock_status (the number of hits has done for the current rock)
+
+the rock_ids of the past rocks that has been completed
+
+a rock table
+
+rock_id (unique key)
+
+number of hits it requires to complete open the rock (a number)
+
+the jade id (what user will get after completed the rock hitting)
+
+a jade table

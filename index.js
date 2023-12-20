@@ -1,5 +1,7 @@
 // Import modules
 const express = require('express');
+const session = require('express-session');
+const bcrypt = require('bcryptjs');
 const mysql = require('mysql2');
 
 // Create an express application
@@ -8,17 +10,7 @@ const app = express();
 // Define a port number
 const port = 3000;
 
-// Define a route for the root URL
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
-});
-
-// MySQL Connection
+// Set up your MySQL connection
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',  
@@ -29,46 +21,41 @@ const connection = mysql.createConnection({
 // connect to the database
 connection.connect(err => {
   if (err) {
-    console.error('Error connecting to the database: ' + err.stack);
-    return;
+      console.error('Error connecting to the database: ' + err.stack);
+      return;
   }
   console.log('Connected to database with ID ' + connection.threadId);
 });
 
-// text the sql connect
-connection.query('SELECT 1 + 1 AS solution', (error, results, fields) => {
-  if (error) throw error;
-  console.log('The solution is: ', results[0].solution);
+module.exports.connection = connection;
+
+// Session setup
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// Parsing JSON and form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from the 'public' directory
+app.use(express.static(__dirname + '/public'));
+
+// Import the routes
+const rockRoutes = require('./public/routes/hitRockRoutes');
+const userRoutes = require('./public/routes/userRoutes'); 
+// Use the imported routes
+app.use('/api', rockRoutes); 
+app.use('/user', userRoutes); 
+
+// Define a route for the root URL
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
 });
 
-// routes
-//the Login Route
-app.post('/login', (req, res) => {
-  // Placeholder for authentication logic
-  res.sendFile(__dirname + '/public/login.html');
-
-  res.send('Login successful');
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
 });
-
-//the Logout Route
-app.get('/logout', (req, res) => {
-  // Placeholder for logout logic
-  // ...
-
-  res.send('Logout successful');
-});
-
-//Route for the Button Action
-app.post('/uncomfortable', (req, res) => {
-  // Logic to handle the uncomfortable button press
-  // E.g., incrementing a counter in the database
-  // ...
-
-  res.send('Uncomfortable point recorded');
-});
-
-// Route for the history page
-app.get('/history', (req, res) => {
-  res.sendFile(__dirname + '/public/history.html');
-});
-
