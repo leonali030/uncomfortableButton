@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 sessionStorage.setItem('username', formData.get('username'));
+                sessionStorage.setItem('userid', data.userid);
                 updateUIOnLogin(formData.get('username'));
             } else {
                 alert('Registration failed: ' + data.message);
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 sessionStorage.setItem('username', formData.get('username'));
+                sessionStorage.setItem('userid', data.userid);
                 updateUIOnLogin(formData.get('username'));
             } else {
                 alert('Login failed: ' + data.message);
@@ -104,9 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle the 'Felt Uncomfortable' Button Click
     document.getElementById('uncomfortableButton').addEventListener('click', function() {
-        const userId = sessionStorage.getItem('userId'); // Retrieve the user ID
-        console.log(userId);
-        if (!userId) {
+        const userid = sessionStorage.getItem('userid'); // Retrieve the user name
+        console.log(userid);
+        if (!userid) {
             alert("You must be logged in to perform this action.");
             return;
         }
@@ -116,12 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ userId }) // Use the actual user ID
+            body: JSON.stringify({ userid })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('rockStatus').innerText = `Current progress of rock hitting: ${data.updatedStatus}%`;
+                document.getElementById('rockStatus').innerText = `Current progress of rock hitting: ${data.newStatus}%`;
             } else {
                 console.error('Error:', data.message);
             }

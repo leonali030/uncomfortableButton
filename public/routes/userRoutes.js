@@ -25,13 +25,16 @@ router.post('/register', (req, res) => {
 
         // Assign the first rock to the user
         const userId = results.insertId;
-        connection.query('INSERT INTO user_status (userid, current_rock_id) VALUES (?, 1)', [userId], (error, results) => {
+
+        
+        connection.query('INSERT INTO user_status (userid, current_rock_id, hits_required) VALUES (?, 1, 5)', [userId], (error, results) => {
             if (error) {
                 res.status(500).send('Error in assigning rock');
                 return;
             }
 
-            res.json({ success: true, message: "User registered and rock assigned" });
+            res.json({ success: true, message: "User registered", userid: userId });
+
         });
     });
 });
@@ -50,7 +53,7 @@ router.post('/login', (req, res) => {
         // Create a session
         req.session.userId = results[0].userid;
         req.session.username = username;
-        res.json({ success: true, message: "Logged out successfully" });
+        res.json({ success: true, message: "Logged in successfully", userid: req.session.userId});
     });
 });
 
