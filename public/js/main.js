@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 sessionStorage.setItem('username', formData.get('username'));
-                sessionStorage.setItem('userid', data.userid);
+                sessionStorage.setItem('userId', data.userId);
                 updateUIOnLogin(formData.get('username'));
             } else {
                 alert('Registration failed: ' + data.message);
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 sessionStorage.setItem('username', formData.get('username'));
-                sessionStorage.setItem('userid', data.userid);
+                sessionStorage.setItem('userId', data.userId);
                 updateUIOnLogin(formData.get('username'));
             } else {
                 alert('Login failed: ' + data.message);
@@ -106,9 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle the 'Felt Uncomfortable' Button Click
     document.getElementById('uncomfortableButton').addEventListener('click', function() {
-        const userid = sessionStorage.getItem('userid'); // Retrieve the user name
-        console.log(userid);
-        if (!userid) {
+        const userId = sessionStorage.getItem('userId'); // Retrieve the user name
+        if (!userId) {
             alert("You must be logged in to perform this action.");
             return;
         }
@@ -118,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ userid })
+            body: JSON.stringify({ userId })
         })
         .then(response => response.json())
         .then(data => {

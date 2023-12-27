@@ -2,9 +2,27 @@ const express = require('express');
 const router = express.Router();
 const { connection } = require('../../index');
 
+function mapRockToJade(rockHitsRequired) {
+    // Define the maximum Jade ID
+    const maxJadeId = 10;
+
+    // Calculate a base value for Jade ID based on the rock ID
+    // Adjust the factor to control how much the rock ID influences the Jade ID
+    let baseJadeId = Math.min(Math.floor(rockHitsRequired / 2), maxJadeId);
+
+    // Add some randomness, adjust the range as needed
+    let randomAddition = Math.floor(Math.random() * 3) - 1;
+
+    // Calculate the final Jade ID
+    let jadeId = Math.min(maxJadeId, Math.max(1, baseJadeId + randomAddition));
+
+    return jadeId;
+}
+//mapRockToJade(15)
+
 // Endpoint to handle the "Felt Uncomfortable" button click
 router.post('/hit-rock', (req, res) => {
-    const userId = req.body.userid;
+    const userId = req.body.userId;
 
     // Begin transaction
     connection.beginTransaction(err => {
@@ -15,7 +33,7 @@ router.post('/hit-rock', (req, res) => {
         }
 
         // Step 1: Get the current rock status for the user
-        connection.query('SELECT current_rock_id, current_rock_status, hits_required FROM user_status WHERE userid = ?', [userId], (error, userStatusResults) => {
+        connection.query('SELECT currentRockId, currentRockHits, hitsRequired FROM userStatus WHERE userId = ?', [userId], (error, userStatusResults) => {
             if (error) {
                 connection.rollback(() => {
                     console.error('Error querying user status:', error);
@@ -31,12 +49,23 @@ router.post('/hit-rock', (req, res) => {
                 return;
             }
 
-            const { current_rock_id, current_rock_status, hits_required } = userStatusResults[0];
-            let newRockStatus = current_rock_status + 1;
+            const { currentRockId, currentRockHits, hitsRequired } = userStatusResults[0];
+            let newRockStatus = currentRockHits + 1;
 
-            if (newRockStatus < hits_required) {
+            // Insert a row into userUncomfortableHits
+            connection.query('INSERT INTO userUncomfortableHits (userId, rockId) VALUES (?, ?)', [userId, currentRockId], error => {
+                if (error) {
+                    connection.rollback(() => {
+                        console.error('Error inserting into userUncomfortableHits:', error);
+                        res.status(500).json({ success: false, message: 'Error inserting into userUncomfortableHits' });
+                    });
+                    return;
+                }
+            });
+
+            if (newRockStatus < hitsRequired) {
                 // Update current rock status
-                connection.query('UPDATE user_status SET current_rock_status = ? WHERE userid = ?', [newRockStatus, userId], error => {
+                connection.query('UPDATE userStatus SET currentRockHits = ? WHERE userId = ?', [newRockStatus, userId], error => {
                     if (error) {
                         connection.rollback(() => {
                             console.error('Error updating rock status:', error);
@@ -44,12 +73,25 @@ router.post('/hit-rock', (req, res) => {
                         });
                         return;
                     }
-                    commitTransaction(res, 'Rock hit successfully', newRockStatus, hits_required);
+                    commitTransaction(res, 'Rock hit successfully', newRockStatus, hitsRequired);
                 });
             } else {
+                // Get the jade for the finished rock
+                const jadeId = mapRockToJade(hitsRequired);
+
+                // Update user status with new rock
+                connection.query('INSERT INTO userJadeOwnership (userId, jadeId) VALUES (?, ?)', [userId, jadeId], error => {
+                    if (error) {
+                        connection.rollback(() => {
+                            console.error('Error updating userJadeOwnership:', error);
+                            res.status(500).json({ success: false, message: 'Error updating userJadeOwnership' });
+                        });
+                        return;
+                    }
+                });
                 // Rock completion logic
                 // Retrieve the next rock's hits_required and increment current_rock_id
-                connection.query('SELECT hits_required FROM rocks WHERE rock_id = ?', [current_rock_id + 1], (error, nextRockResults) => {
+                connection.query('SELECT hitsRequired FROM rocks WHERE rockId = ?', [currentRockId + 1], (error, nextRockResults) => {
                     if (error || nextRockResults.length === 0) {
                         connection.rollback(() => {
                             console.error('Error getting next rock:', error);
@@ -58,10 +100,10 @@ router.post('/hit-rock', (req, res) => {
                         return;
                     }
 
-                    const nextHitsRequired = nextRockResults[0].hits_required;
+                    const nextHitsRequired = nextRockResults[0].hitsRequired;
 
                     // Update user status with new rock
-                    connection.query('UPDATE user_status SET current_rock_id = ?, current_rock_status = 0, hits_required = ? WHERE userid = ?', [current_rock_id + 1, nextHitsRequired, userId], error => {
+                    connection.query('UPDATE userStatus SET currentRockId = ?, currentRockHits = 0, hitsRequired = ? WHERE userId = ?', [currentRockId + 1, nextHitsRequired, userId], error => {
                         if (error) {
                             connection.rollback(() => {
                                 console.error('Error updating user status for new rock:', error);
@@ -78,7 +120,8 @@ router.post('/hit-rock', (req, res) => {
 });
 
 function commitTransaction(res, message, currentRockStatus, hitsRequired) {
-    const progressPercentage = (currentRockStatus / hitsRequired) * 100;
+    const progressPercentage = parseFloat(((currentRockStatus / hitsRequired) * 100).toFixed(2));
+
 
     connection.commit(error => {
         if (error) {

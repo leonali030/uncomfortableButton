@@ -7,7 +7,7 @@ const { connection } = require('../../index');
 
 // Registration endpoint
 router.post('/register', (req, res) => {
-    const { username, password} = req.body;
+    const {username, password} = req.body;
     
     // Check if the username and password are provided
     if (!username || !password) {
@@ -27,13 +27,13 @@ router.post('/register', (req, res) => {
         const userId = results.insertId;
 
         
-        connection.query('INSERT INTO user_status (userid, current_rock_id, hits_required) VALUES (?, 1, 5)', [userId], (error, results) => {
+        connection.query('INSERT INTO userStatus (userId, currentRockId, hitsRequired) VALUES (?, 1, 5)', [userId], (error, results) => {
             if (error) {
                 res.status(500).send('Error in assigning rock');
                 return;
             }
 
-            res.json({ success: true, message: "User registered", userid: userId });
+            res.json({ success: true, message: "User registered", userId: userId });
 
         });
     });
@@ -51,9 +51,9 @@ router.post('/login', (req, res) => {
         }
 
         // Create a session
-        req.session.userId = results[0].userid;
+        req.session.userId = results[0].userId;
         req.session.username = username;
-        res.json({ success: true, message: "Logged in successfully", userid: req.session.userId});
+        res.json({ success: true, message: "Logged in successfully", userId: req.session.userId});
     });
 });
 
