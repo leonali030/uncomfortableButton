@@ -2,6 +2,21 @@ const express = require('express');
 const router = express.Router();
 const { connection } = require('../../index');
 
+function generateNewRockId(currentRockId) {
+    let newRockId;
+
+    if (currentRockId >= 5) {
+        // Generate a random number between 1 and 5
+        newRockId = Math.floor(Math.random() * 5) + 1;
+    } else {
+        // Generate a random number between 1 and 10
+        newRockId = Math.floor(Math.random() * 10) + 1;
+    }
+
+    return newRockId;
+}
+
+
 function mapRockToJade(rockHitsRequired) {
     // Define the maximum Jade ID
     const maxJadeId = 10;
@@ -50,7 +65,7 @@ router.post('/hit-rock', (req, res) => {
             }
 
             const { currentRockId, currentRockHits, hitsRequired } = userStatusResults[0];
-            let newRockStatus = currentRockHits + 1;
+            let newRockStatus = currentRockHits + 1; 
 
             // Insert a row into userUncomfortableHits
             connection.query('INSERT INTO userUncomfortableHits (userId, rockId) VALUES (?, ?)', [userId, currentRockId], error => {
@@ -80,7 +95,17 @@ router.post('/hit-rock', (req, res) => {
                 const jadeId = mapRockToJade(hitsRequired);
 
                 // Update user status with new rock
-                connection.query('INSERT INTO userJadeOwnership (userId, jadeId) VALUES (?, ?)', [userId, jadeId], error => {
+                const query = `
+                INSERT INTO userJadeOwnership (userId, jadeId, acquiredTimestamp, hitsRequired)
+                SELECT ?, ?, NOW(), ?
+                FROM dual
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM userJadeOwnership 
+                    WHERE userId = ? AND jadeId = ? AND acquiredTimestamp = NOW()
+                );
+                `;
+
+                connection.query(query, [userId, jadeId, hitsRequired, userId, jadeId], error => {
                     if (error) {
                         connection.rollback(() => {
                             console.error('Error updating userJadeOwnership:', error);
@@ -90,8 +115,9 @@ router.post('/hit-rock', (req, res) => {
                     }
                 });
                 // Rock completion logic
+                const newRockId = generateNewRockId(currentRockId);
                 // Retrieve the next rock's hits_required and increment current_rock_id
-                connection.query('SELECT hitsRequired FROM rocks WHERE rockId = ?', [currentRockId + 1], (error, nextRockResults) => {
+                connection.query('SELECT hitsRequired FROM rocks WHERE rockId = ?', [newRockId], (error, nextRockResults) => {
                     if (error || nextRockResults.length === 0) {
                         connection.rollback(() => {
                             console.error('Error getting next rock:', error);
@@ -103,7 +129,7 @@ router.post('/hit-rock', (req, res) => {
                     const nextHitsRequired = nextRockResults[0].hitsRequired;
 
                     // Update user status with new rock
-                    connection.query('UPDATE userStatus SET currentRockId = ?, currentRockHits = 0, hitsRequired = ? WHERE userId = ?', [currentRockId + 1, nextHitsRequired, userId], error => {
+                    connection.query('UPDATE userStatus SET currentRockId = ?, currentRockHits = 0, hitsRequired = ? WHERE userId = ?', [newRockId, nextHitsRequired, userId], error => {
                         if (error) {
                             connection.rollback(() => {
                                 console.error('Error updating user status for new rock:', error);

@@ -25,6 +25,7 @@ router.post('/register', (req, res) => {
 
         // Assign the first rock to the user
         const userId = results.insertId;
+       // req.session.userId = userId; // Establish a session
 
         
         connection.query('INSERT INTO userStatus (userId, currentRockId, hitsRequired) VALUES (?, 1, 5)', [userId], (error, results) => {
@@ -34,9 +35,12 @@ router.post('/register', (req, res) => {
             }
 
             res.json({ success: true, message: "User registered", userId: userId });
+        
 
         });
+
     });
+    
 });
 
 

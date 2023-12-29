@@ -45,9 +45,15 @@ app.use(express.static(__dirname + '/public'));
 
 // Import the routes
 const rockRoutes = require('./public/routes/hitRockRoutes');
-const userRoutes = require('./public/routes/userRoutes'); 
+const userRoutes = require('./public/routes/userRoutes');
+const historyRoutes = require('./public/routes/hitHistoryRoutes'); 
+const jadesRoutes = require('./public/routes/jadesHistoryRoutes'); 
+const progressRoutes = require('./public/routes/hitProgressRoutes'); 
 // Use the imported routes
 app.use('/api', rockRoutes); 
+app.use('/api', historyRoutes); 
+app.use('/api', progressRoutes); 
+app.use('/api', jadesRoutes);
 app.use('/user', userRoutes); 
 
 // Define a route for the root URL
